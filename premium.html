@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Premium Management</title>
+  <style>
+    .container {
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .status {
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .active {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+    .expired {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Premium Status</h1>
+    <div id="statusContainer"></div>
+    <button id="renewButton">Renew Subscription</button>
+    <button id="cancelButton">Cancel Subscription</button>
+    <button id="recoverButton">Recover Access</button>
+  </div>
+  <script src="premium.js"></script>
+</body>
+</html> 
