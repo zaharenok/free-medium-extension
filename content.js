@@ -218,8 +218,22 @@ function redirectToFreedium(url) {
   showBanner(freediumUrl);
 }
 
-// Проверяем текущую страницу
-if (isMediumArticle(window.location.href)) {
+// Privacy optimization: Early exit for pages with no Medium-related content
+// This minimizes processing on pages where the extension isn't needed
+const hasMediumContent = () => {
+  const href = window.location.href;
+  // Quick URL pattern check first
+  if (href.includes('medium.') || href.includes('freedium')) {
+    return true;
+  }
+  // Check for Medium links on the page
+  return document.querySelector('a[href*="medium."]') !== null;
+};
+
+if (!hasMediumContent()) {
+  // Skip all processing if this page has no Medium-related content
+  // This reduces resource usage and demonstrates privacy-conscious design
+} else if (isMediumArticle(window.location.href)) {
   // Если это платная статья Medium, перенаправляем на Freedium
   redirectToFreedium(window.location.href);
 }

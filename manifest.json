@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Medium to Freedium Redirect",
   "version": "1.2",
-  "description": "Автоматически перенаправляет платные статьи через Freedium",
+  "description": "Automatically redirects paywalled Medium articles to Freedium. Read premium content for free.",
   "icons": {
     "16": "icon.png",
     "48": "icon.png",
