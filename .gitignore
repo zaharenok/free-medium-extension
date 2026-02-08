@@ -23,3 +23,9 @@ Thumbs.db
 # Private documentation (not for public repo)
 CHROME_STORE_LISTING.md
 CHROME_STORE_PRIVACY_JUSTIFICATION.md
+
+# Claude/assistant files
+.claude/
+
+# Project helpers (not part of extension)
+icon-generator.html
