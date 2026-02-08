@@ -76,6 +76,34 @@ function showBanner(freediumUrl) {
       font-weight: bold;
       margin-top: 10px;
     }
+    .learn-more-button {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 30px;
+      background: white;
+      color: #2196F3;
+      text-decoration: none;
+      border-radius: 25px;
+      font-weight: bold;
+      font-size: 16px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .learn-more-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      animation: none;
+    }
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+      }
+      50% {
+        transform: scale(1.03);
+        box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0.3);
+      }
+    }
   `;
   document.head.appendChild(style);
 
@@ -85,6 +113,7 @@ function showBanner(freediumUrl) {
     <button class="close-button">×</button>
     <h1>Free Internet for All!</h1>
     <p>Redirecting in <span class="countdown">10</span> seconds...</p>
+    <a href="https://bit.ly/4apsZXl" target="_blank" class="learn-more-button">Learn More</a>
   `;
 
   document.body.appendChild(banner);
@@ -189,6 +218,13 @@ document.addEventListener('click', (e) => {
   const link = e.target.closest('a');
   if (!link) return;
 
+  // Пропускаем кнопку Learn More и наши собственные элементы
+  if (link.classList.contains('learn-more-button') ||
+      link.closest('.freedium-banner') ||
+      link.href.includes('bit.ly/')) {
+    return;
+  }
+
   // Проверяем, ведет ли ссылка на Medium-подобный контент
   if (link.href && isMediumArticle(link.href)) {
     e.preventDefault();
@@ -203,6 +239,12 @@ const observer = new MutationObserver((mutations) => {
       if (node.nodeType === 1) { // Проверяем, что это HTML-элемент
         const links = node.querySelectorAll('a');
         links.forEach(link => {
+          // Пропускаем кнопку Learn More и bit.ly ссылки
+          if (link.classList.contains('learn-more-button') ||
+              link.href.includes('bit.ly/') ||
+              link.closest('.freedium-banner')) {
+            return;
+          }
           if (link.href && isMediumArticle(link.href)) {
             link.addEventListener('click', (e) => {
               e.preventDefault();
