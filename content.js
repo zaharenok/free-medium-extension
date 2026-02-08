@@ -1,6 +1,9 @@
 console.log('Content script loaded');
 
 function showBanner(freediumUrl) {
+  // Track banner display event
+  chrome.runtime.sendMessage({ action: 'trackEvent', eventName: 'banner_shown' });
+
   if (window.redirectTimer || window.countdownInterval) {
     clearTimeout(window.redirectTimer);
     clearInterval(window.countdownInterval);
@@ -113,10 +116,18 @@ function showBanner(freediumUrl) {
     <button class="close-button">×</button>
     <h1>Free Internet for All!</h1>
     <p>Redirecting in <span class="countdown">10</span> seconds...</p>
-    <a href="https://bit.ly/4apsZXl" target="_blank" class="learn-more-button">Learn More</a>
+    <a href="https://www.skool.com/ai-pays-my-bills-7018/about" target="_blank" class="learn-more-button" data-ga-event="learn_more_click">Learn More</a>
   `;
 
   document.body.appendChild(banner);
+
+  // Track Learn More button click
+  const learnMoreButton = banner.querySelector('.learn-more-button');
+  if (learnMoreButton) {
+    learnMoreButton.addEventListener('click', () => {
+      chrome.runtime.sendMessage({ action: 'trackEvent', eventName: 'learn_more_click' });
+    });
+  }
 
   const closeButton = banner.querySelector('.close-button');
   const countdownElement = banner.querySelector('.countdown');
@@ -221,7 +232,7 @@ document.addEventListener('click', (e) => {
   // Пропускаем кнопку Learn More и наши собственные элементы
   if (link.classList.contains('learn-more-button') ||
       link.closest('.freedium-banner') ||
-      link.href.includes('bit.ly/')) {
+      link.href.includes('skool.com/')) {
     return;
   }
 
@@ -239,9 +250,9 @@ const observer = new MutationObserver((mutations) => {
       if (node.nodeType === 1) { // Проверяем, что это HTML-элемент
         const links = node.querySelectorAll('a');
         links.forEach(link => {
-          // Пропускаем кнопку Learn More и bit.ly ссылки
+          // Пропускаем кнопку Learn More и skool.com ссылки
           if (link.classList.contains('learn-more-button') ||
-              link.href.includes('bit.ly/') ||
+              link.href.includes('skool.com/') ||
               link.closest('.freedium-banner')) {
             return;
           }
