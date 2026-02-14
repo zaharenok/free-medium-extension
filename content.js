@@ -1,6 +1,6 @@
 console.log('Content script loaded');
 
-function showBanner(freediumUrl) {
+function showMirrorOptions(freediumUrl) {
   // Track banner display event
   chrome.runtime.sendMessage({ action: 'trackEvent', eventName: 'banner_shown' });
 
@@ -74,10 +74,37 @@ function showBanner(freediumUrl) {
       font-size: 18px;
       margin: 0;
     }
-    .countdown {
-      font-size: 24px;
+    .actions {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .actions button {
+      padding: 12px 30px;
+      border-radius: 25px;
       font-weight: bold;
-      margin-top: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .open-button {
+      background: white;
+      color: #2196F3;
+      border: none;
+    }
+    .open-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .stay-button {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid white;
+    }
+    .stay-button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
     }
     .learn-more-button {
       display: inline-block;
@@ -114,8 +141,12 @@ function showBanner(freediumUrl) {
   banner.className = 'freedium-banner';
   banner.innerHTML = `
     <button class="close-button">×</button>
-    <h1>Free Internet for All!</h1>
-    <p>Redirecting in <span class="countdown">10</span> seconds...</p>
+    <h1>Freedium Mirror Available</h1>
+    <p>Open this article on freedium.cfd?</p>
+    <div class="actions">
+      <button class="open-button">Open Now</button>
+      <button class="stay-button">Stay on Medium</button>
+    </div>
     <a href="https://www.skool.com/ai-pays-my-bills-7018/about" target="_blank" class="learn-more-button" data-ga-event="learn_more_click">Learn More</a>
   `;
 
@@ -130,92 +161,77 @@ function showBanner(freediumUrl) {
   }
 
   const closeButton = banner.querySelector('.close-button');
-  const countdownElement = banner.querySelector('.countdown');
-  let secondsLeft = 10;
+  const openButton = banner.querySelector('.open-button');
+  const stayButton = banner.querySelector('.stay-button');
 
   closeButton.addEventListener('click', () => {
-    if (confirm('Вы уверены, что хотите закрыть баннер?')) {
-      overlay.remove();
-      banner.remove();
-      clearInterval(window.countdownInterval);
-      clearTimeout(window.redirectTimer);
-    }
+    overlay.remove();
+    banner.remove();
   });
 
-  window.countdownInterval = setInterval(() => {
-    secondsLeft--;
-    if (countdownElement) {
-      countdownElement.textContent = secondsLeft;
-    }
-    if (secondsLeft <= 0) {
-      clearInterval(window.countdownInterval);
-    }
-  }, 1000);
-
-  window.redirectTimer = setTimeout(() => {
+  openButton.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ action: 'trackEvent', eventName: 'open_mirror' });
     window.location.href = freediumUrl;
-  }, 10000);
+  });
+
+  stayButton.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ action: 'trackEvent', eventName: 'stay_on_medium' });
+    overlay.remove();
+    banner.remove();
+  });
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'showBanner') {
-    console.log('Received showBanner message with URL:', request.freediumUrl);
-    showBanner(request.freediumUrl);
+  if (request.action === 'showMirrorOptions') {
+    console.log('Received showMirrorOptions message with URL:', request.freediumUrl);
+    showMirrorOptions(request.freediumUrl);
   }
 });
 
-// Функция для определения, является ли страница статьей Medium
+// Function to detect if this is a Medium article page
 function isMediumArticle(url) {
-  // Проверяем наличие характерных элементов Medium на странице
+  // Check for characteristic Medium elements on the page
   const mediumSignatures = [
-    // Типичные мета-теги Medium
+    // Typical Medium meta tags
     'meta[name="twitter:site"][content*="@Medium"]',
     'meta[property="og:site_name"][content*="Medium"]',
-    // Характерные элементы интерфейса Medium
+    // Characteristic Medium UI elements
     'div[data-testid="post-sidebar"]',
     'div[data-testid="storyStream"]',
-    // Характерные классы Medium
+    // Characteristic Medium classes
     '.progressiveMedia',
-    '.graf--title',
-    // Проверка на наличие платного контента
-    'div[class*="paywall"]',
-    'div[class*="membership-prompt"]',
-    '.meteredContent'
+    '.graf--title'
   ];
 
-  // Проверяем URL на наличие типичных параметров Medium
+  // Check URL for typical Medium parameters
   const mediumUrlPatterns = [
     '?source=',
     '/tagged/',
     '/latest',
     '/@',
     '/p/',
-    '-'  // Типичный разделитель в URL статей Medium
+    '-'  // Typical separator in Medium article URLs
   ];
 
-  // Проверяем наличие элементов Medium на странице
-  const hasMediumElements = mediumSignatures.some(selector => 
+  // Check for Medium elements on the page
+  const hasMediumElements = mediumSignatures.some(selector =>
     document.querySelector(selector) !== null
   );
 
-  // Проверяем URL на характерные паттерны
-  const hasMediumUrlPattern = mediumUrlPatterns.some(pattern => 
+  // Check URL for characteristic patterns
+  const hasMediumUrlPattern = mediumUrlPatterns.some(pattern =>
     url.includes(pattern)
   );
 
-  // Проверяем наличие платного контента
-  const hasPaywall = document.querySelector('div[class*="paywall"]') !== null ||
-                    document.querySelector('.meteredContent') !== null;
-
-  // Возвращаем true если есть элементы Medium или URL похож на Medium
-  return hasMediumElements || (hasMediumUrlPattern && hasPaywall);
+  // Return true if there are Medium elements or URL looks like Medium
+  return hasMediumElements || hasMediumUrlPattern;
 }
 
-// Функция для перенаправления на Freedium
-function redirectToFreedium(url) {
+// Function to show mirror options for Medium articles
+function openFreediumMirror(url) {
   const freediumUrl = `https://freedium-mirror.cfd/${url}`;
-  console.log('Перенаправление на Freedium:', freediumUrl);
-  showBanner(freediumUrl);
+  console.log('Opening Freedium mirror:', freediumUrl);
+  showMirrorOptions(freediumUrl);
 }
 
 // Privacy optimization: Early exit for pages with no Medium-related content
@@ -235,7 +251,7 @@ if (!hasMediumContent()) {
   // This reduces resource usage and demonstrates privacy-conscious design
 } else if (isMediumArticle(window.location.href)) {
   // Если это платная статья Medium, перенаправляем на Freedium
-  redirectToFreedium(window.location.href);
+  openFreediumMirror(window.location.href);
 }
 
 // Обработчик кликов по ссылкам
@@ -253,7 +269,7 @@ document.addEventListener('click', (e) => {
   // Проверяем, ведет ли ссылка на Medium-подобный контент
   if (link.href && isMediumArticle(link.href)) {
     e.preventDefault();
-    redirectToFreedium(link.href);
+    openFreediumMirror(link.href);
   }
 });
 
@@ -273,7 +289,7 @@ const observer = new MutationObserver((mutations) => {
           if (link.href && isMediumArticle(link.href)) {
             link.addEventListener('click', (e) => {
               e.preventDefault();
-              redirectToFreedium(link.href);
+              openFreediumMirror(link.href);
             });
           }
         });

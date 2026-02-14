@@ -167,18 +167,17 @@ chrome.webNavigation.onCompleted.addListener(async (details) => {
     )) {
       const freediumUrl = `https://freedium-mirror.cfd${url.pathname}${url.search}`;
 
-      // Если премиум - делаем редирект без баннера
-      if (isPremium) {
-        // Track redirect success
-        await sendEvent('redirect_success', { url: freediumUrl });
-        chrome.tabs.update(details.tabId, { url: freediumUrl });
-        return;
-      }
+      // Premium users get the banner too - user choice is important
+      // if (isPremium) {
+      //   await sendEvent('redirect_success', { url: freediumUrl });
+      //   chrome.tabs.update(details.tabId, { url: freediumUrl });
+      //   return;
+      // }
 
-      // Если нет премиума - показываем баннер
+      // Show mirror options to user - let them decide
       const currentCount = await updateCounter(details.url);
       chrome.tabs.sendMessage(details.tabId, {
-        action: 'showBanner',
+        action: 'showMirrorOptions',
         freediumUrl: freediumUrl,
         articlesCount: currentCount,
         isPremium: false
