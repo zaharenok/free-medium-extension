@@ -18,7 +18,7 @@ const MEDIUM_DOMAINS = [
   'android-ui.dev',
 ];
 
-const FREEDIUM_BASE = 'https://freedium.cfd';
+const FREEDIUM_BASE = 'https://freedium-mirror.cfd';
 
 // Check if URL is a Medium article
 function isMediumUrl(url) {

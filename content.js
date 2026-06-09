@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const FREEDIUM_BASE = 'https://freedium.cfd';
+  const FREEDIUM_BASE = 'https://freedium-mirror.cfd';
 
   // Medium domains
   const MEDIUM_DOMAINS = [
