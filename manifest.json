@@ -1,20 +1,19 @@
 {
   "manifest_version": 3,
-  "name": "Medium Reader with Freedium",
-  "version": "1.3",
-  "description": "Quick access to freedium.cfd mirror for enhanced Medium reading experience.",
+  "name": "Medium → Freedium",
+  "version": "2.0",
+  "description": "Opens Medium articles on Freedium mirror automatically.",
   "icons": {
-    "16": "icon.png",
-    "48": "icon.png",
-    "128": "icon.png"
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   },
   "permissions": [
     "storage",
     "webNavigation"
   ],
   "host_permissions": [
-    "<all_urls>",
-    "https://www.google-analytics.com/*"
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js"
@@ -22,14 +21,16 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"]
+      "js": ["content.js"],
+      "run_at": "document_idle"
     }
   ],
   "action": {
     "default_icon": {
-      "16": "icon.png",
-      "48": "icon.png",
-      "128": "icon.png"
-    }
+      "16": "icons/icon16.png",
+                    "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Medium → Freedium"
   }
 }

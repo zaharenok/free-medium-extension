@@ -1,304 +1,176 @@
-console.log('Content script loaded');
+(() => {
+  'use strict';
 
-function showMirrorOptions(freediumUrl) {
-  // Track banner display event
-  chrome.runtime.sendMessage({ action: 'trackEvent', eventName: 'banner_shown' });
+  const FREEDIUM_BASE = 'https://freedium.cfd';
 
-  if (window.redirectTimer || window.countdownInterval) {
-    clearTimeout(window.redirectTimer);
-    clearInterval(window.countdownInterval);
-  }
-
-  if (document.querySelector('.freedium-banner')) {
-    return;
-  }
-
-  const overlay = document.createElement('div');
-  overlay.className = 'freedium-overlay';
-  overlay.style.position = 'fixed';
-  overlay.style.top = '0';
-  overlay.style.left = '0';
-  overlay.style.right = '0';
-  overlay.style.bottom = '0';
-  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-  overlay.style.zIndex = '999998';
-  document.body.appendChild(overlay);
-
-  const style = document.createElement('style');
-  style.textContent = `
-    .freedium-banner {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: linear-gradient(45deg, #2196F3, #00BCD4);
-      padding: 30px 60px;
-      border-radius: 10px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-      color: white;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      z-index: 999999;
-      animation: fadeIn 0.5s ease-out;
-    }
-    .close-button {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      color: white;
-      font-size: 18px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.3s;
-    }
-    .close-button:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translate(-50%, -60%); }
-      to { opacity: 1; transform: translate(-50%, -50%); }
-    }
-    .freedium-banner h1 {
-      font-size: 32px;
-      margin: 0;
-      margin-bottom: 15px;
-    }
-    .freedium-banner p {
-      font-size: 18px;
-      margin: 0;
-    }
-    .actions {
-      display: flex;
-      gap: 15px;
-      justify-content: center;
-      margin-top: 20px;
-    }
-    .actions button {
-      padding: 12px 30px;
-      border-radius: 25px;
-      font-weight: bold;
-      font-size: 16px;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .open-button {
-      background: white;
-      color: #2196F3;
-      border: none;
-    }
-    .open-button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }
-    .stay-button {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      border: 2px solid white;
-    }
-    .stay-button:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: scale(1.05);
-    }
-    .learn-more-button {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 12px 30px;
-      background: white;
-      color: #2196F3;
-      text-decoration: none;
-      border-radius: 25px;
-      font-weight: bold;
-      font-size: 16px;
-      transition: transform 0.2s, box-shadow 0.2s;
-      animation: pulse 2s ease-in-out infinite;
-    }
-    .learn-more-button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-      animation: none;
-    }
-    @keyframes pulse {
-      0%, 100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
-      }
-      50% {
-        transform: scale(1.03);
-        box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0.3);
-      }
-    }
-  `;
-  document.head.appendChild(style);
-
-  const banner = document.createElement('div');
-  banner.className = 'freedium-banner';
-  banner.innerHTML = `
-    <button class="close-button">×</button>
-    <h1>Freedium Mirror Available</h1>
-    <p>Open this article on freedium.cfd?</p>
-    <div class="actions">
-      <button class="open-button">Open Now</button>
-      <button class="stay-button">Stay on Medium</button>
-    </div>
-    <a href="https://www.skool.com/ai-pays-my-bills-7018/about" target="_blank" class="learn-more-button" data-ga-event="learn_more_click">Learn More</a>
-  `;
-
-  document.body.appendChild(banner);
-
-  // Track Learn More button click
-  const learnMoreButton = banner.querySelector('.learn-more-button');
-  if (learnMoreButton) {
-    learnMoreButton.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ action: 'trackEvent', eventName: 'learn_more_click' });
-    });
-  }
-
-  const closeButton = banner.querySelector('.close-button');
-  const openButton = banner.querySelector('.open-button');
-  const stayButton = banner.querySelector('.stay-button');
-
-  closeButton.addEventListener('click', () => {
-    overlay.remove();
-    banner.remove();
-  });
-
-  openButton.addEventListener('click', () => {
-    chrome.runtime.sendMessage({ action: 'trackEvent', eventName: 'open_mirror' });
-    window.location.href = freediumUrl;
-  });
-
-  stayButton.addEventListener('click', () => {
-    chrome.runtime.sendMessage({ action: 'trackEvent', eventName: 'stay_on_medium' });
-    overlay.remove();
-    banner.remove();
-  });
-}
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'showMirrorOptions') {
-    console.log('Received showMirrorOptions message with URL:', request.freediumUrl);
-    showMirrorOptions(request.freediumUrl);
-  }
-});
-
-// Function to detect if this is a Medium article page
-function isMediumArticle(url) {
-  // Check for characteristic Medium elements on the page
-  const mediumSignatures = [
-    // Typical Medium meta tags
-    'meta[name="twitter:site"][content*="@Medium"]',
-    'meta[property="og:site_name"][content*="Medium"]',
-    // Characteristic Medium UI elements
-    'div[data-testid="post-sidebar"]',
-    'div[data-testid="storyStream"]',
-    // Characteristic Medium classes
-    '.progressiveMedia',
-    '.graf--title'
+  // Medium domains
+  const MEDIUM_DOMAINS = [
+    'medium.com',
+    'towardsdatascience.com',
+    'bettermarketing.pub',
+    'generativeai.pub',
+    'bootcamp.uxdesign.cc',
+    'plainenglish.io',
+    'blog.bitsrc.io',
+    'codeburst.io',
+    'itnext.io',
+    'levelup.gitconnected.com',
+    'javascript.plainenglish.io',
+    'python.plainenglish.io',
+    'blog.devgenius.io',
+    'proandroiddev.com',
   ];
 
-  // Check URL for typical Medium parameters
-  const mediumUrlPatterns = [
-    '?source=',
-    '/tagged/',
-    '/latest',
-    '/@',
-    '/p/',
-    '-'  // Typical separator in Medium article URLs
-  ];
-
-  // Check for Medium elements on the page
-  const hasMediumElements = mediumSignatures.some(selector =>
-    document.querySelector(selector) !== null
-  );
-
-  // Check URL for characteristic patterns
-  const hasMediumUrlPattern = mediumUrlPatterns.some(pattern =>
-    url.includes(pattern)
-  );
-
-  // Return true if there are Medium elements or URL looks like Medium
-  return hasMediumElements || hasMediumUrlPattern;
-}
-
-// Function to show mirror options for Medium articles
-function openFreediumMirror(url) {
-  const freediumUrl = `https://freedium-mirror.cfd/${url}`;
-  console.log('Opening Freedium mirror:', freediumUrl);
-  showMirrorOptions(freediumUrl);
-}
-
-// Privacy optimization: Early exit for pages with no Medium-related content
-// This minimizes processing on pages where the extension isn't needed
-const hasMediumContent = () => {
-  const href = window.location.href;
-  // Quick URL pattern check first
-  if (href.includes('medium.') || href.includes('freedium')) {
-    return true;
-  }
-  // Check for Medium links on the page
-  return document.querySelector('a[href*="medium."]') !== null;
-};
-
-if (!hasMediumContent()) {
-  // Skip all processing if this page has no Medium-related content
-  // This reduces resource usage and demonstrates privacy-conscious design
-} else if (isMediumArticle(window.location.href)) {
-  // Если это платная статья Medium, перенаправляем на Freedium
-  openFreediumMirror(window.location.href);
-}
-
-// Обработчик кликов по ссылкам
-document.addEventListener('click', (e) => {
-  const link = e.target.closest('a');
-  if (!link) return;
-
-  // Пропускаем кнопку Learn More и наши собственные элементы
-  if (link.classList.contains('learn-more-button') ||
-      link.closest('.freedium-banner') ||
-      link.href.includes('skool.com/')) {
-    return;
+  function isMediumUrl(url) {
+    try {
+      const u = new URL(url);
+      return MEDIUM_DOMAINS.some(d => u.hostname === d || u.hostname.endsWith('.' + d));
+    } catch {
+      return false;
+    }
   }
 
-  // Проверяем, ведет ли ссылка на Medium-подобный контент
-  if (link.href && isMediumArticle(link.href)) {
-    e.preventDefault();
-    openFreediumMirror(link.href);
-  }
-});
+  // Check if current page is a Medium article
+  function isMediumArticlePage() {
+    const url = window.location.href;
+    if (!isMediumUrl(url)) return false;
 
-// Наблюдатель за изменениями в DOM для динамически добавляемых ссылок
-const observer = new MutationObserver((mutations) => {
-  mutations.forEach(mutation => {
-    mutation.addedNodes.forEach(node => {
-      if (node.nodeType === 1) { // Проверяем, что это HTML-элемент
-        const links = node.querySelectorAll('a');
-        links.forEach(link => {
-          // Пропускаем кнопку Learn More и skool.com ссылки
-          if (link.classList.contains('learn-more-button') ||
-              link.href.includes('skool.com/') ||
-              link.closest('.freedium-banner')) {
-            return;
-          }
-          if (link.href && isMediumArticle(link.href)) {
-            link.addEventListener('click', (e) => {
-              e.preventDefault();
-              openFreediumMirror(link.href);
-            });
-          }
-        });
+    // Medium articles have /@user/slug pattern or are on subdomain
+    const path = window.location.pathname;
+    if (path.match(/^\/@[\w-]+\/[\w-]+/)) return true;
+    // Tag pages, publication pages with /p/ etc
+    if (path.match(/^\/p\//)) return true;
+
+    // Fallback: check for Medium meta tags
+    const meta = document.querySelector('meta[property="al:android:app_name"]');
+    if (meta && meta.content === 'Medium') return true;
+
+    return false;
+  }
+
+  // Show banner and redirect
+  function showBanner() {
+    if (document.getElementById('freedium-banner')) return;
+
+    const mediumUrl = window.location.href;
+    const freediumUrl = `${FREEDIUM_BASE}/${mediumUrl}`;
+
+    const style = document.createElement('style');
+    style.textContent = `
+      #freedium-banner {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 2147483647;
+        background: linear-gradient(135deg, #00ab6c 0%, #1a8917 100%);
+        color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.2); font-size: 14px;
+        animation: freedium-slide-down 0.3s ease-out;
       }
-    });
-  });
-});
+      @keyframes freedium-slide-down {
+        from { transform: translateY(-100%); } to { transform: translateY(0); }
+      }
+      #freedium-banner .fb-text { display: flex; align-items: center; gap: 8px; }
+      #freedium-banner .fb-text span { opacity: 0.9; }
+      #freedium-banner .fb-actions { display: flex; gap: 8px; }
+      #freedium-banner button {
+        border: none; border-radius: 6px; padding: 8px 16px; cursor: pointer;
+        font-size: 13px; font-weight: 600; transition: all 0.15s;
+      }
+      .fb-open { background: #fff; color: #1a8917; }
+      .fb-open:hover { background: #f0f0f0; }
+      .fb-close { background: rgba(255,255,255,0.2); color: #fff; }
+      .fb-close:hover { background: rgba(255,255,255,0.3); }
+      .fb-countdown { opacity: 0.7; font-size: 12px; margin-left: 8px; }
+    `;
+    document.head.appendChild(style);
 
-observer.observe(document.body, {
-  childList: true,
-  subtree: true
-});
+    const banner = document.createElement('div');
+    banner.id = 'freedium-banner';
+    banner.innerHTML = `
+      <div class="fb-text">
+        <span>📰</span>
+        <span>Read this article free on Freedium</span>
+        <span class="fb-countdown" id="fb-countdown">Auto-opening in 5s...</span>
+      </div>
+      <div class="fb-actions">
+        <button class="fb-open" id="fb-open">Open Freedium</button>
+        <button class="fb-close" id="fb-close">Stay on Medium</button>
+      </div>
+    `;
+    document.documentElement.prepend(banner);
+
+    // Push body down
+    document.body.style.marginTop = (banner.offsetHeight + 10) + 'px';
+
+    // Countdown
+    let seconds = 5;
+    const countdownEl = document.getElementById('fb-countdown');
+    const timer = setInterval(() => {
+      seconds--;
+      if (seconds <= 0) {
+        clearInterval(timer);
+        window.location.href = freediumUrl;
+        return;
+      }
+      countdownEl.textContent = `Auto-opening in ${seconds}s...`;
+    }, 1000);
+
+    // Buttons
+    document.getElementById('fb-open').addEventListener('click', () => {
+      clearInterval(timer);
+      chrome.runtime.sendMessage({ action: 'increment', url: mediumUrl });
+      window.location.href = freediumUrl;
+    });
+
+    document.getElementById('fb-close').addEventListener('click', () => {
+      clearInterval(timer);
+      banner.remove();
+      document.body.style.marginTop = '';
+    });
+
+    // Track
+    chrome.runtime.sendMessage({ action: 'increment', url: mediumUrl });
+  }
+
+  // Intercept clicks on Medium links on non-Medium pages
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a[href]');
+    if (!link) return;
+
+    const href = link.getAttribute('href');
+    if (!href) return;
+
+    // Resolve relative URLs
+    const fullUrl = new URL(href, window.location.origin).href;
+    if (isMediumUrl(fullUrl)) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.open(`${FREEDIUM_BASE}/${fullUrl}`, '_blank');
+    }
+  }, true);
+
+  // Watch for dynamically added links
+  const observer = new MutationObserver((mutations) => {
+    // Check if we just loaded a Medium page
+    if (isMediumArticlePage() && !document.getElementById('freedium-banner')) {
+      showBanner();
+    }
+  });
+
+  // Run on existing page
+  if (isMediumArticlePage()) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', showBanner);
+    } else {
+      showBanner();
+    }
+  }
+
+  // Start observing
+  if (document.body) {
+    observer.observe(document.body, { childList: true, subtree: true });
+  } else {
+    document.addEventListener('DOMContentLoaded', () => {
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
+  }
+})();
