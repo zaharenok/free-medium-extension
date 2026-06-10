@@ -53,7 +53,7 @@
     if (document.getElementById('freedium-banner')) return;
 
     const mediumUrl = window.location.href;
-    const freediumUrl = `${FREEDIUM_BASE}/${mediumUrl}`;
+    const freediumUrl = `${FREEDIUM_BASE}/${mediumUrl}?utm_source=extension&utm_medium=browser&utm_campaign=freedium`;
 
     const style = document.createElement('style');
     style.textContent = `

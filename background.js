@@ -20,6 +20,10 @@ const MEDIUM_DOMAINS = [
 
 const FREEDIUM_BASE = 'https://freedium-mirror.cfd';
 
+// GA4 Measurement Protocol — подставь свои значения
+const GA4_MEASUREMENT_ID = 'G-XXXXXXXXXX';  // ← твой Measurement ID
+const GA4_API_SECRET = 'YOUR_API_SECRET';    // ← твой API Secret
+
 // Check if URL is a Medium article
 function isMediumUrl(url) {
   try {
@@ -32,7 +36,11 @@ function isMediumUrl(url) {
 
 // Convert Medium URL to Freedium mirror URL
 function toFreediumUrl(mediumUrl) {
-  return `${FREEDIUM_BASE}/${mediumUrl}`;
+  const url = new URL(`${FREEDIUM_BASE}/${mediumUrl}`);
+  url.searchParams.set('utm_source', 'extension');
+  url.searchParams.set('utm_medium', 'browser');
+  url.searchParams.set('utm_campaign', 'freedium');
+  return url.toString();
 }
 
 // Counter storage
@@ -57,7 +65,34 @@ async function incrementCounter(url) {
   }
 
   await chrome.storage.local.set({ stats });
+
+  // GA4 event
+  sendGa4Event('freedium_redirect', { url });
+
   return stats;
+}
+
+// GA4 Measurement Protocol sender
+function sendGa4Event(name, params = {}) {
+  if (GA4_MEASUREMENT_ID === 'G-XXXXXXXXXX') return; // не настроено — пропуск
+
+  const clientId = crypto.randomUUID();
+  const payload = {
+    client_id: clientId,
+    events: [{
+      name,
+      params: {
+        ...params,
+        session_id: clientId.slice(0, 8),
+        engagement_time_msec: 1,
+      },
+    }],
+  };
+
+  fetch(
+    `https://www.google-analytics.com/mp/collect?measurement_id=${GA4_MEASUREMENT_ID}&api_secret=${GA4_API_SECRET}`,
+    { method: 'POST', body: JSON.stringify(payload) }
+  ).catch(() => {}); // тихо глушим ошибки
 }
 
 // Badge update
