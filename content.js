@@ -117,7 +117,7 @@
     heart.textContent = 'Made with ❤️ ·';
 
     const loveLink = document.createElement('a');
-    loveLink.href = 'https://www.skool.com/ai-pays-my-bills-7018';
+    loveLink.href = 'https://www.skool.com/ai-pays-my-bills-7018/about';
     loveLink.target = '_blank';
     loveLink.textContent = '🌟 Support us — join our community!';
     loveLink.style.cssText = 'color:#fff;font-weight:700;font-size:15px;text-decoration:underline;text-underline-offset:3px;';
