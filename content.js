@@ -121,6 +121,9 @@
     loveLink.target = '_blank';
     loveLink.textContent = '🌟 Support us — join our community!';
     loveLink.style.cssText = 'color:#fff;font-weight:700;font-size:15px;text-decoration:underline;text-underline-offset:3px;';
+    loveLink.addEventListener('click', () => {
+      chrome.runtime.sendMessage({ action: 'track', event: 'skool_click', params: { domain, url: mediumUrl } });
+    });
 
     row2.append(heart, loveLink);
 
