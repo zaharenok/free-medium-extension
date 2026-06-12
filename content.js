@@ -36,11 +36,14 @@
     const url = window.location.href;
     if (!isMediumUrl(url)) return false;
 
-    // Medium articles have /@user/slug pattern or are on subdomain
+    // Medium articles: /@user/slug (dots allowed in username like joe.njenga)
+    // or /publication-name/article-slug (at least 2 path segments, not /p/ special)
     const path = window.location.pathname;
-    if (path.match(/^\/@[\w-]+\/[\w-]+/)) return true;
-    // Tag pages, publication pages with /p/ etc
+    if (path.match(/^\/@[\w.-]+\/[\w-]+/)) return true;
     if (path.match(/^\/p\//)) return true;
+    // Publication articles: /short-name/article-slug-here (2+ segments, not root or /@)
+    const segments = path.split('/').filter(Boolean);
+    if (segments.length >= 2 && !segments[0].startsWith('@') && segments[0] !== 'p') return true;
 
     // Fallback: check for Medium meta tags
     const meta = document.querySelector('meta[property="al:android:app_name"]');
@@ -97,7 +100,7 @@
       <div class="fb-text">
         <span>📰</span>
         <span>Read this article free on Freedium</span>
-        <span class="fb-countdown" id="fb-countdown">Auto-opening in 3s...</span>
+        <span class="fb-countdown" id="fb-countdown">Auto-opening in 5s...</span>
       </div>
       <div class="fb-actions">
         <div class="fb-love">Made with ❤️ · <a href="https://www.skool.com/ai-pays-my-bills-7018" target="_blank">Support us</a></div>
@@ -111,7 +114,7 @@
     document.body.style.marginTop = (banner.offsetHeight + 10) + 'px';
 
     // Countdown
-    let seconds = 3;
+    let seconds = 5;
     const countdownEl = document.getElementById('fb-countdown');
     const timer = setInterval(() => {
       seconds--;
