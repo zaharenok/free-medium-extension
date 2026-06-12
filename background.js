@@ -20,9 +20,9 @@ const MEDIUM_DOMAINS = [
 
 const FREEDIUM_BASE = 'https://freedium-mirror.cfd';
 
-// GA4 Measurement Protocol — подставь свои значения
-const GA4_MEASUREMENT_ID = 'G-XXXXXXXXXX';  // ← твой Measurement ID
-const GA4_API_SECRET = 'YOUR_API_SECRET';    // ← твой API Secret
+// GA4 Measurement Protocol
+const GA4_MEASUREMENT_ID = 'G-0BYNWSVBWY';
+const GA4_API_SECRET = 'PcU4kGVMQVa-ScarRQkiaQ';
 
 // Check if URL is a Medium article
 function isMediumUrl(url) {
@@ -74,8 +74,6 @@ async function incrementCounter(url) {
 
 // GA4 Measurement Protocol sender
 function sendGa4Event(name, params = {}) {
-  if (GA4_MEASUREMENT_ID === 'G-XXXXXXXXXX') return; // не настроено — пропуск
-
   const clientId = crypto.randomUUID();
   const payload = {
     client_id: clientId,
@@ -133,5 +131,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'toFreedium') {
     sendResponse({ url: toFreediumUrl(request.url) });
     return true;
+  }
+  if (request.action === 'track') {
+    sendGa4Event(request.event, request.params || {});
+    sendResponse({ ok: true });
+    return false;
   }
 });

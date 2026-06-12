@@ -69,6 +69,8 @@
     if (document.getElementById('freedium-banner')) return;
     LOG('showBanner: CREATING BANNER for', window.location.href);
 
+    const domain = window.location.hostname;
+
     const mediumUrl = window.location.href;
     const freediumUrl = `${FREEDIUM_BASE}/${mediumUrl}?utm_source=extension&utm_medium=browser&utm_campaign=freedium`;
 
@@ -139,6 +141,7 @@
       if (seconds <= 0) {
         clearInterval(timer);
         LOG('REDIRECTING to', freediumUrl);
+        chrome.runtime.sendMessage({ action: 'track', event: 'auto_redirect', params: { domain, url: mediumUrl } });
         window.location.href = freediumUrl;
         return;
       }
@@ -148,12 +151,14 @@
     // Buttons
     openBtn.addEventListener('click', () => {
       clearInterval(timer);
+      chrome.runtime.sendMessage({ action: 'track', event: 'open_click', params: { domain, url: mediumUrl } });
       chrome.runtime.sendMessage({ action: 'increment', url: mediumUrl });
       window.location.href = freediumUrl;
     });
 
     closeBtn.addEventListener('click', () => {
       clearInterval(timer);
+      chrome.runtime.sendMessage({ action: 'track', event: 'stay_click', params: { domain, url: mediumUrl } });
       banner.remove();
       if (document.body) document.body.style.marginTop = '';
     });
@@ -167,7 +172,8 @@
     });
     protector.observe(document.documentElement, { childList: true, subtree: true });
 
-    // Track
+    // Track banner shown
+    chrome.runtime.sendMessage({ action: 'track', event: 'banner_shown', params: { domain, url: mediumUrl } });
     chrome.runtime.sendMessage({ action: 'increment', url: mediumUrl });
   }
 
