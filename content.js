@@ -19,6 +19,7 @@
     'python.plainenglish.io',
     'blog.devgenius.io',
     'proandroiddev.com',
+    'writingcooperative.com',
   ];
 
   function isMediumUrl(url) {
@@ -139,22 +140,8 @@
     chrome.runtime.sendMessage({ action: 'increment', url: mediumUrl });
   }
 
-  // Intercept clicks on Medium links on non-Medium pages
-  document.addEventListener('click', (e) => {
-    const link = e.target.closest('a[href]');
-    if (!link) return;
-
-    const href = link.getAttribute('href');
-    if (!href) return;
-
-    // Resolve relative URLs
-    const fullUrl = new URL(href, window.location.origin).href;
-    if (isMediumUrl(fullUrl)) {
-      e.preventDefault();
-      e.stopPropagation();
-      window.open(`${FREEDIUM_BASE}/${fullUrl}`, '_blank');
-    }
-  }, true);
+  // Medium links on non-Medium pages open normally in new tab
+  // Content.js in the new tab will show the banner with countdown
 
   // Watch for dynamically added links
   const observer = new MutationObserver((mutations) => {

@@ -13,7 +13,7 @@ const MEDIUM_DOMAINS = [
   'javascript.plainenglish.io',
   'python.plainenglish.io',
   'blog.devgenius.io',
-  'writing cooperative.com',
+  'writingcooperative.com',
   'proandroiddev.com',
   'android-ui.dev',
 ];
