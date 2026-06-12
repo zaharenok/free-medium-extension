@@ -72,58 +72,59 @@
     const mediumUrl = window.location.href;
     const freediumUrl = `${FREEDIUM_BASE}/${mediumUrl}?utm_source=extension&utm_medium=browser&utm_campaign=freedium`;
 
-    // Build banner with inline styles (no <style> tag — defeats CSP)
+    // Build banner — two rows, big, inline styles (no <style> tag — defeats CSP)
     const banner = document.createElement('div');
     banner.id = 'freedium-banner';
-    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:linear-gradient(135deg,#00ab6c 0%,#1a8917 100%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,0.2);font-size:14px;';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:linear-gradient(135deg,#00ab6c 0%,#1a8917 100%);color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:14px 24px;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
 
-    // Left side: text + countdown
-    const textDiv = document.createElement('div');
-    textDiv.style.cssText = 'display:flex;align-items:center;gap:8px;';
+    // Row 1: main text + countdown + buttons
+    const row1 = document.createElement('div');
+    row1.style.cssText = 'display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;';
 
-    const icon = document.createElement('span');
-    icon.textContent = '📰';
-
-    const label = document.createElement('span');
-    label.style.opacity = '0.9';
-    label.textContent = 'Read this article free on Freedium';
+    const textWrap = document.createElement('div');
+    textWrap.style.cssText = 'display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600;';
+    textWrap.textContent = '📰 Read this article free on Freedium';
 
     const countdown = document.createElement('span');
     countdown.id = 'fb-countdown';
-    countdown.style.cssText = 'opacity:0.7;font-size:12px;margin-left:8px;';
-    countdown.textContent = 'Auto-opening in 5s...';
+    countdown.style.cssText = 'opacity:0.8;font-size:14px;font-weight:400;margin-left:6px;';
+    countdown.textContent = 'Auto-opening in 10s...';
+    textWrap.appendChild(countdown);
 
-    textDiv.append(icon, label, countdown);
-
-    // Right side: love + buttons
-    const actionsDiv = document.createElement('div');
-    actionsDiv.style.cssText = 'display:flex;gap:8px;align-items:center;';
-
-    const loveDiv = document.createElement('div');
-    loveDiv.style.cssText = 'opacity:0.75;font-size:11px;display:flex;align-items:center;gap:4px;';
-    const loveText = document.createElement('span');
-    loveText.textContent = 'Made with ❤️ · ';
-    const loveLink = document.createElement('a');
-    loveLink.href = 'https://www.skool.com/ai-pays-my-bills-7018';
-    loveLink.target = '_blank';
-    loveLink.textContent = 'Support us';
-    loveLink.style.cssText = 'color:#fff;text-decoration:underline;opacity:0.9;';
-    loveDiv.append(loveText, loveLink);
+    const btnWrap = document.createElement('div');
+    btnWrap.style.cssText = 'display:flex;gap:8px;';
 
     const openBtn = document.createElement('button');
     openBtn.id = 'fb-open';
     openBtn.textContent = 'Open Freedium';
-    openBtn.style.cssText = 'border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600;background:#fff;color:#1a8917;';
+    openBtn.style.cssText = 'border:none;border-radius:8px;padding:10px 20px;cursor:pointer;font-size:14px;font-weight:700;background:#fff;color:#1a8917;box-shadow:0 2px 8px rgba(0,0,0,0.15);';
 
     const closeBtn = document.createElement('button');
     closeBtn.id = 'fb-close';
     closeBtn.textContent = 'Stay on Medium';
-    closeBtn.style.cssText = 'border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600;background:rgba(255,255,255,0.2);color:#fff;';
+    closeBtn.style.cssText = 'border:2px solid rgba(255,255,255,0.5);border-radius:8px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600;background:transparent;color:#fff;';
 
-    countdown.textContent = 'Auto-opening in 8s...';
-    banner.append(textDiv, actionsDiv);
+    btnWrap.append(openBtn, closeBtn);
+    row1.append(textWrap, btnWrap);
 
-    // Insert into body (not documentElement — more reliable)
+    // Row 2: prominent Skool link
+    const row2 = document.createElement('div');
+    row2.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:6px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.25);font-size:14px;';
+
+    const heart = document.createElement('span');
+    heart.textContent = 'Made with ❤️ ·';
+
+    const loveLink = document.createElement('a');
+    loveLink.href = 'https://www.skool.com/ai-pays-my-bills-7018';
+    loveLink.target = '_blank';
+    loveLink.textContent = '🌟 Support us — join our community!';
+    loveLink.style.cssText = 'color:#fff;font-weight:700;font-size:15px;text-decoration:underline;text-underline-offset:3px;';
+
+    row2.append(heart, loveLink);
+
+    banner.append(row1, row2);
+
+    // Insert into body
     (document.body || document.documentElement).prepend(banner);
     LOG('Banner inserted into DOM, offsetHeight:', banner.offsetHeight);
 
@@ -131,7 +132,7 @@
     if (document.body) document.body.style.marginTop = (banner.offsetHeight + 10) + 'px';
 
     // Countdown
-    let seconds = 8;
+    let seconds = 10;
     const timer = setInterval(() => {
       seconds--;
       LOG('Countdown:', seconds);
