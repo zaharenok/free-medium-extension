@@ -111,7 +111,7 @@
     closeBtn.textContent = 'Stay on Medium';
     closeBtn.style.cssText = 'border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600;background:rgba(255,255,255,0.2);color:#fff;';
 
-    actionsDiv.append(loveDiv, openBtn, closeBtn);
+    countdown.textContent = 'Auto-opening in 8s...';
     banner.append(textDiv, actionsDiv);
 
     // Insert into body (not documentElement — more reliable)
@@ -122,7 +122,7 @@
     if (document.body) document.body.style.marginTop = (banner.offsetHeight + 10) + 'px';
 
     // Countdown
-    let seconds = 5;
+    let seconds = 8;
     const timer = setInterval(() => {
       seconds--;
       LOG('Countdown:', seconds);
