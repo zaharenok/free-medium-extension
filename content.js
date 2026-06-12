@@ -1,6 +1,7 @@
 (() => {
   'use strict';
-
+  const LOG = (...args) => console.log('%c[Freedium Ext]', 'color:#1a8917;font-weight:bold', ...args);
+  LOG('Content script loaded', window.location.href);
   const FREEDIUM_BASE = 'https://freedium-mirror.cfd';
 
   // Medium domains
@@ -25,8 +26,11 @@
   function isMediumUrl(url) {
     try {
       const u = new URL(url);
-      return MEDIUM_DOMAINS.some(d => u.hostname === d || u.hostname.endsWith('.' + d));
-    } catch {
+      const result = MEDIUM_DOMAINS.some(d => u.hostname === d || u.hostname.endsWith('.' + d));
+      LOG('isMediumUrl?', url, 'hostname:', u.hostname, '=>', result);
+      return result;
+    } catch(e) {
+      LOG('isMediumUrl ERROR', e.message);
       return false;
     }
   }
@@ -34,27 +38,34 @@
   // Check if current page is a Medium article
   function isMediumArticlePage() {
     const url = window.location.href;
-    if (!isMediumUrl(url)) return false;
+    if (!isMediumUrl(url)) { LOG('isMediumArticlePage: not a medium domain'); return false; }
 
     // Medium articles: /@user/slug (dots allowed in username like joe.njenga)
     // or /publication-name/article-slug (at least 2 path segments, not /p/ special)
     const path = window.location.pathname;
-    if (path.match(/^\/@[\w.-]+\/[\w-]+/)) return true;
-    if (path.match(/^\/p\//)) return true;
+    LOG('isMediumArticlePage: path =', path);
+
+    if (path.match(/^\/@[\w.-]+\/[\w-]+/)) { LOG('=> matched @user/slug'); return true; }
+    if (path.match(/^\/p\//)) { LOG('=> matched /p/'); return true; }
     // Publication articles: /short-name/article-slug-here (2+ segments, not root or /@)
     const segments = path.split('/').filter(Boolean);
-    if (segments.length >= 2 && !segments[0].startsWith('@') && segments[0] !== 'p') return true;
+    LOG('segments:', segments);
+    if (segments.length >= 2 && !segments[0].startsWith('@') && segments[0] !== 'p') { LOG('=> matched publication/slug'); return true; }
 
     // Fallback: check for Medium meta tags
     const meta = document.querySelector('meta[property="al:android:app_name"]');
-    if (meta && meta.content === 'Medium') return true;
+    LOG('meta tag:', meta ? meta.content : 'NOT FOUND');
+    if (meta && meta.content === 'Medium') { LOG('=> matched meta tag'); return true; }
 
+    LOG('=> NOT a medium article page');
     return false;
   }
 
   // Show banner and redirect
   function showBanner() {
+    LOG('showBanner called, existing banner?', !!document.getElementById('freedium-banner'));
     if (document.getElementById('freedium-banner')) return;
+    LOG('showBanner: CREATING BANNER for', window.location.href);
 
     const mediumUrl = window.location.href;
     const freediumUrl = `${FREEDIUM_BASE}/${mediumUrl}?utm_source=extension&utm_medium=browser&utm_campaign=freedium`;
@@ -140,6 +151,7 @@
     });
 
     // Track
+    LOG('Sending increment for', mediumUrl);
     chrome.runtime.sendMessage({ action: 'increment', url: mediumUrl });
   }
 
@@ -155,10 +167,13 @@
   });
 
   // Run on existing page
+  LOG('Initial check: isMediumArticlePage =', isMediumArticlePage(), 'readyState:', document.readyState);
   if (isMediumArticlePage()) {
     if (document.readyState === 'loading') {
+      LOG('Waiting for DOMContentLoaded...');
       document.addEventListener('DOMContentLoaded', showBanner);
     } else {
+      LOG('Calling showBanner immediately');
       showBanner();
     }
   }
