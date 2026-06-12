@@ -47,10 +47,12 @@
 
     if (path.match(/^\/@[\w.-]+\/[\w-]+/)) { LOG('=> matched @user/slug'); return true; }
     if (path.match(/^\/p\//)) { LOG('=> matched /p/'); return true; }
-    // Publication articles: /short-name/article-slug-here (2+ segments, not root or /@)
+    // Publication articles: /short-name/article-slug (2+ segments)
     const segments = path.split('/').filter(Boolean);
-    LOG('segments:', segments);
+    LOG('segments:', segments, 'hostname:', window.location.hostname);
     if (segments.length >= 2 && !segments[0].startsWith('@') && segments[0] !== 'p') { LOG('=> matched publication/slug'); return true; }
+    // Subdomain blogs: pinetwork-official.medium.com/article-slug-id (1 segment on a subdomain)
+    if (segments.length === 1 && window.location.hostname !== 'medium.com') { LOG('=> matched subdomain article'); return true; }
 
     // Fallback: check for Medium meta tags
     const meta = document.querySelector('meta[property="al:android:app_name"]');
@@ -99,7 +101,14 @@
 
     const loveDiv = document.createElement('div');
     loveDiv.style.cssText = 'opacity:0.75;font-size:11px;display:flex;align-items:center;gap:4px;';
-    loveDiv.innerHTML = 'Made with ❤️ · <a href="https://www.skool.com/ai-pays-my-bills-7018" target="_blank" style="color:#fff;text-decoration:underline;opacity:0.9;">Support us</a>';
+    const loveText = document.createElement('span');
+    loveText.textContent = 'Made with ❤️ · ';
+    const loveLink = document.createElement('a');
+    loveLink.href = 'https://www.skool.com/ai-pays-my-bills-7018';
+    loveLink.target = '_blank';
+    loveLink.textContent = 'Support us';
+    loveLink.style.cssText = 'color:#fff;text-decoration:underline;opacity:0.9;';
+    loveDiv.append(loveText, loveLink);
 
     const openBtn = document.createElement('button');
     openBtn.id = 'fb-open';
